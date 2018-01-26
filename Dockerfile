@@ -10,13 +10,6 @@ LABEL \
 USER root
 EXPOSE 3000
 
-# Will be overridded by the version from the template
-ENV \
-  GRAFANA_VERSION="4.6.3" \
-  GF_PLUGIN_DIR="/var/lib/grafana/plugins" \
-  BUILD_INSTALL_PLUGINS="hawkular-datasource" \
-  LOCAL_PLUGIN_DIR="/var/lib/grafana/local-plugins"
-
 RUN \
     yum -y update && \
     yum -y install curl wget unzip && \

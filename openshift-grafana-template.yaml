@@ -124,15 +124,14 @@ objects:
           kind: ImageStreamTag
           name: centos:7
         env:
-        - name: GRAFANA_VERSION
-          value: ${GRAFANA_VERSION}
-        - name: GF_PLUGIN_DIR
-          value: ${PLUGIN_DIR}
-        - name: BUILD_INSTALL_PLUGINS
-          value: ${BUILD_INSTALL_PLUGINS}
-        - name: BUILD_REPO_URL
-          value: ${BUILD_REPO_URL}
-
+          - name: GRAFANA_VERSION
+            value: ${GRAFANA_VERSION}
+          - name: GF_PLUGIN_DIR
+            value: ${PLUGIN_DIR}
+          - name: BUILD_INSTALL_PLUGINS
+            value: ${BUILD_INSTALL_PLUGINS}
+          - name: BUILD_REPO_URL
+            value: ${BUILD_REPO_URL}
     triggers:
     - type: ConfigChange
     - type: ImageChange
