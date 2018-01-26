@@ -14,7 +14,7 @@ if [ ! -z "${GF_INSTALL_PLUGINS}" ]; then
   IFS=$OLDIFS
 fi
 
-/usr/sbin/grafana-server \
+exec /usr/sbin/grafana-server \
 --config=${CONF_FILE} \
 --pidfile=${PID_FILE} \
 cfg:default.paths.logs=${LOG_DIR} \
