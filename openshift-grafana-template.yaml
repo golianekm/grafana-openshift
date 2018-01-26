@@ -43,11 +43,34 @@ parameters:
   required:         true
   value:            1Gi
 
+- name:         BUILD_INSTALL_PLUGINS
+  displayName:      Plugins to install during the build
+  description:      A semicolon (;) seperated list of plugins (or "plugin version")
+                    to install during the build.
+  value:            hawkular-datasource
+
+- name:         BUILD_REPO_URL
+  displayName:      An override URL for the Grafana plugin repo
+  description:      This option allows to override the official download URL
+                    during the build process.
+
 - name:         DATA_DIR
   displayName:      Data directory
   description:      Path to Grafana data directory
   required:         true
-  value:            /usr/share/grafana/data
+  value:            /var/lib/grafana/data
+
+- name:         PLUGIN_DIR
+  displayName:      Plugin directory
+  description:      Path to Grafana plugin directory
+  required:         true
+  value:            /var/lib/grafana/plugins
+
+- name:         LOG_DIR
+  displayName:      Log directory
+  description:      Path to Grafana log directory
+  required:         true
+  value:            /var/log/grafana
 
 objects:
 
@@ -103,6 +126,12 @@ objects:
         env:
         - name: GRAFANA_VERSION
           value: ${GRAFANA_VERSION}
+        - name: GF_PLUGIN_DIR
+          value: ${PLUGIN_DIR}
+        - name: BUILD_INSTALL_PLUGINS
+          value: ${BUILD_INSTALL_PLUGINS}
+        - name: BUILD_REPO_URL
+          value: ${BUILD_REPO_URL}
 
     triggers:
     - type: ConfigChange
@@ -171,14 +200,12 @@ objects:
           image: grafana
 
           env:
-          - name: CONF_FILE
-            value: /etc/config/custom.ini
-          - name: GF_INSTALL_PLUGINS
-            value: hawkular-datasource
-          - name: DATAD
+          - name: DC_DATA_DIR
             value: ${DATA_DIR}
-          - name: PLGND
-            value: ${DATA_DIR}/plugins
+          - name: DC_LOG_DIR
+            value: ${LOG_DIR}
+          - name: GF_PLUGIN_DIR
+            value: ${PLUGIN_DIR}
           - name: GF_SECURITY_ADMIN_PASSWORD
             value: ${ADMIN_PASSWORD}
 

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+source /etc/sysconfig/grafana-server
+
+grafana-openshift-install-local-plugins
+
+if [ -z "$DC_CONFIG_FILE" ] ; then
+
+	echo Using default config
+	CONFIG_FILE="/tmp/grafana.ini"
+	cat "${CONF_FILE:-/etc/grafana/grafana.ini}" > "$CONFIG_FILE"
+
+	if [ -r "${DC_CUSTOM_CONFIG_FILE:=/etc/config/custom.ini}" ] ; then
+		echo "Adding custom config file: $DC_CUSTOM_CONFIG_FILE"
+		cat "${DC_CUSTOM_CONFIG_FILE}" >> "$CONFIG_FILE"
+	fi
+
+else
+
+	echo Using provided config file: $DC_CONFIG_FILE
+	CONFIG_FILE="$DC_CONFIG_FILE"
+
+fi
+
+cd /usr/share/grafana
+
+exec /usr/sbin/grafana-server \
+--config=${CONFIG_FILE} \
+cfg:default.paths.plugins=${GF_PLUGIN_DIR} \
+cfg:default.paths.logs=${LOG_DIR:-${DC_LOG_DIR:-/var/log/grafana}} \
+cfg:default.paths.data=${DATA_DIR:-${DC_DATA_DIR:-/var/lib/grafana}}

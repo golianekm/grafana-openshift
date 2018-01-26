@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+echo Installing remote grafana plugins
+
+echo "BUILD_INSTALL_PLUGINS=$BUILD_INSTALL_PLUGINS"
+
+IFS=';' read -ra PLUGINS <<< "$BUILD_INSTALL_PLUGINS"
+
+test -z "$BUILD_REPO_URL" && GF_PLUGIN_REPO="$BUILD_REPO_URL"
+
+for i in "${PLUGINS[@]}"; do
+	echo "Installing: $i"
+	grafana-cli plugins install $i
+done

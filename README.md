@@ -52,3 +52,30 @@ spec:
   hostPath:
     path: /path/to/my/pv # replace with your local directory
 ~~~
+
+## Plugins
+
+Plugins can be installed when the containers are built and no longer during startup
+of the container. This way everything is available when the container starts, the
+container don't need any external access for downloading plugins and also can you revert
+the container image including the plugins.
+
+There are two ways to install additional plugins:
+
+### Remote plugins
+
+Set the template variable `BUILD_INSTALL_PLUGINS` to a list of plugins you want to include
+in your image. The default is to include `hawkular-datasource`.
+
+This is a semicolon (;) separated list of plugin IDs which will be downloaded during the
+creation of the image. 
+
+### Image local plugins
+
+You can place additional plugins into the directory `$LOCAL_PLUGIN_DIR`
+(which defaults to `/var/lib/grafana/local-plugins`).
+
+The best way to do this would be a derived image: also see [examples/local-plugin/Dockerfile](examples/local-plugin/Dockerfile).
+
+In this case you would need to adapt the template to use your custom base image for the
+deployment configuration.

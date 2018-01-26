@@ -11,16 +11,28 @@ USER root
 EXPOSE 3000
 
 # Will be overridded by the version from the template
-ENV GRAFANA_VERSION="4.6.3"   
+ENV \
+  GRAFANA_VERSION="4.6.3" \
+  GF_PLUGIN_DIR="/var/lib/grafana/plugins" \
+  BUILD_INSTALL_PLUGINS="hawkular-datasource" \
+  LOCAL_PLUGIN_DIR="/var/lib/grafana/local-plugins"
+
+RUN \
+    yum -y update && \
+    yum -y install curl wget unzip && \
+    yum -y install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-"$GRAFANA_VERSION"-1.x86_64.rpm && \
+    yum clean all && rm -Rf /var/cache/yum
 
 COPY root /
 
-RUN yum -y update \
-    && yum -y install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-"$GRAFANA_VERSION"-1.x86_64.rpm \
-    && yum clean all \
-    && /usr/bin/fix-permissions /usr/share/grafana \
-    && /usr/bin/fix-permissions /etc/grafana \
-    && /usr/bin/fix-permissions /var/lib/grafana \
-    && /usr/bin/fix-permissions /var/log/grafana
+RUN \
+    mkdir -p "$LOCAL_PLUGIN_DIR" && \
+    /usr/bin/grafana-openshift-install-remote-plugins
 
-ENTRYPOINT ["/usr/bin/run-grafana"]
+RUN \
+    /usr/bin/fix-permissions /usr/share/grafana && \
+    /usr/bin/fix-permissions /etc/grafana && \
+    /usr/bin/fix-permissions /var/lib/grafana && \
+    /usr/bin/fix-permissions /var/log/grafana
+
+ENTRYPOINT ["/usr/bin/grafana-openshift-run"]

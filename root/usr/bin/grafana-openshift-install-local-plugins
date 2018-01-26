@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+echo Installing local Grafana plugins
+
+ : "${LOCAL_PLUGIN_DIR:=/var/lib/grafana/local-plugins}"
+
+echo LOCAL_PLUGIN_DIR=$LOCAL_PLUGIN_DIR
+
+cd "${GF_PLUGIN_DIR:-/var/lib/grafana/plugins}"
+
+for i in $(find "$LOCAL_PLUGIN_DIR" -name "*.zip"); do
+	echo Installing local plugin archive: $i
+	unzip "$i"
+done
