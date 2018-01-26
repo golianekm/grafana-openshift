@@ -17,7 +17,13 @@ parameters:
   description:      location of the grafana git repo
   value:            https://github.com/ctron/grafana-openshift
 
-- name:           ADMIN_PASSWORD
+- name:         GRAFANA_VERSION
+  displayName:      Grafana version to build for
+  value:            4.6.3
+  description:      Defines the Grafana version which will be installed during
+                    the build of the image.
+
+- name:         ADMIN_PASSWORD
   displayName:      Initial admin password
   description:      The password which will initially be set for the admin user
   generate:         expression
@@ -89,11 +95,14 @@ objects:
         name: grafana:latest
 
     strategy:
+      type: Docker
       dockerStrategy:
         from:
           kind: ImageStreamTag
           name: centos:7
-      type: Docker
+        env:
+        - name: GRAFANA_VERSION
+          value: ${GRAFANA_VERSION}
 
     triggers:
     - type: ConfigChange
