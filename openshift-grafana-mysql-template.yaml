@@ -47,7 +47,7 @@ parameters:
   displayName:      MySQL Host port
   description:      MySQL Host port
   required:         true
-  value:            3306
+  value:            '3306'
   
 - name:         MYSQL_USER
   displayName:      MySQL Database User
