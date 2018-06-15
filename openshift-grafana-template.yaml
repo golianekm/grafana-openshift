@@ -2,13 +2,13 @@ kind: Template
 apiVersion: v1
 
 metadata:
-  name: grafana-openshift
+  name: grafana-openshift-pv
 
   annotations:
-    description: "This is a quickstart template for deploying Grafana on OpenShift"
+    description: "Grafana on OpenShift with Persistent Storage"
     iconClass: "fa fa-area-chart"
-    tags: "quickstart"
-    openshift.io/display-name: "Grafana Quickstart"
+    tags: "Grafana PV"
+    openshift.io/display-name: "Grafana PV"
 
 parameters:
 
