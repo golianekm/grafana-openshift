@@ -41,7 +41,7 @@ parameters:
   displayName:      MySQL Hostname
   description:      MySQL Hostname
   required:         true
-  value:            mariadb.grafana.svc
+  value:            'mariadb.grafana.svc'
 
 - name:         MYSQL_PORT
   displayName:      MySQL Host port
@@ -53,19 +53,19 @@ parameters:
   displayName:      MySQL Database User
   description:      MySQL Database User
   required:         true
-  value:            user
+  value:            'user'
   
 - name:         MYSQL_PASSWORD
   displayName:      MySQL Database User Password
   description:      MySQL Database User Password
   required:         true
-  value:            password
+  value:            'password'
   
 - name:         MYSQL_DATABASE_NAME
   displayName:      MySQL DatabaseName
   description:      MySQL DatabaseName
   required:         true
-  value:            grafana
+  value:            'grafana'
   
 - name:         BUILD_INSTALL_PLUGINS
   displayName:      Plugins to install during the build
@@ -188,7 +188,7 @@ objects:
       plugins=${PLUGIN_DIR}
       
       [database]
-      url=  mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE_NAME}
+      url=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE_NAME}
       
       [session]
       provider=mysql
