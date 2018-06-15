@@ -306,7 +306,7 @@ objects:
       protocol: TCP
       targetPort: 3000
 
-# Route
+# Route definition
 
 - kind: Route
   apiVersion: v1
