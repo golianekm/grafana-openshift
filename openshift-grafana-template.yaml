@@ -71,6 +71,12 @@ parameters:
   description:      Path to Grafana log directory
   required:         true
   value:            /var/log/grafana
+  
+- name:         LOCAL_PLUGIN_DIR
+  displayName:      Local plugin directory
+  description:      Local plugin directory
+  required:         true
+  value:            /var/lib/grafana/local-plugins
 
 objects:
 
@@ -132,6 +138,8 @@ objects:
             value: ${BUILD_INSTALL_PLUGINS}
           - name: BUILD_REPO_URL
             value: ${BUILD_REPO_URL}
+          - name: LOCAL_PLUGIN_DIR
+            value: ${LOCAL_PLUGIN_DIR}
     triggers:
     - type: ConfigChange
     - type: ImageChange
@@ -163,6 +171,11 @@ objects:
     name: grafana-custom-config
   data:
     custom.ini: |+
+      [paths]
+      data=${DATA_DIR}
+      logs=${LOG_DIR}
+      plugins=${PLUGIN_DIR}
+      
       [analytics]
       reporting_enabled=false
       check_for_updates=false
