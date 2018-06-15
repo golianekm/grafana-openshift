@@ -1,0 +1,321 @@
+kind: Template
+apiVersion: v1
+
+metadata:
+  name: grafana-openshift-mysql
+
+  annotations:
+    description: "Grafana on OpenShift with MySQL"
+    iconClass: "fa fa-area-chart"
+    tags: "Grafana MySQL"
+    openshift.io/display-name: "Grafana MySQL"
+
+parameters:
+
+- name:         GIT_URI
+  displayName:      Git repository URI
+  description:      location of the grafana git repo
+  value:            https://github.com/golianekm/grafana-openshift
+
+- name:         GRAFANA_VERSION
+  displayName:      Grafana version to build for
+  value:            5.1.3
+  description:      Defines the Grafana version which will be installed during
+                    the build of the image.
+
+- name:         ADMIN_PASSWORD
+  displayName:      Initial admin password
+  description:      The password which will initially be set for the admin user
+  generate:         expression
+  from:             "[a-zA-Z0-9]{12}"
+  required:         true
+
+- name:         WEBHOOK_SECRET
+  displayName:      GitHub Webhook Secret
+  description:      Github trigger secret. A difficult to guess string encoded as part
+                    of the webhook URL. Not encrypted.
+  generate:         expression
+  from:             '[a-zA-Z0-9]{40}'
+  
+- name:         MYSQL_HOST
+  displayName:      MySQL Hostname
+  description:      MySQL Hostname
+  required:         true
+  value:            mariadb.grafana.svc
+
+- name:         MYSQL_PORT
+  displayName:      MySQL Host port
+  description:      MySQL Host port
+  required:         true
+  value:            3306
+  
+- name:         MYSQL_USER
+  displayName:      MySQL Database User
+  description:      MySQL Database User
+  required:         true
+  value:            user
+  
+- name:         MYSQL_PASSWORD
+  displayName:      MySQL Database User Password
+  description:      MySQL Database User Password
+  required:         true
+  value:            password
+  
+- name:         MYSQL_DATABASE_NAME
+  displayName:      MySQL DatabaseName
+  description:      MySQL DatabaseName
+  required:         true
+  value:            grafana
+  
+- name:         BUILD_INSTALL_PLUGINS
+  displayName:      Plugins to install during the build
+  description:      A semicolon (;) seperated list of plugins (or "plugin version")
+                    to install during the build.
+  value:            hawkular-datasource
+
+- name:         BUILD_REPO_URL
+  displayName:      An override URL for the Grafana plugin repo
+  description:      This option allows to override the official download URL
+                    during the build process.
+
+- name:         DATA_DIR
+  displayName:      Data directory
+  description:      Path to Grafana data directory
+  required:         true
+  value:            /var/lib/grafana/data
+
+- name:         PLUGIN_DIR
+  displayName:      Plugin directory
+  description:      Path to Grafana plugin directory
+  required:         true
+  value:            /var/lib/grafana/plugins
+
+- name:         LOG_DIR
+  displayName:      Log directory
+  description:      Path to Grafana log directory
+  required:         true
+  value:            /var/log/grafana
+  
+- name:         LOCAL_PLUGIN_DIR
+  displayName:      Local plugin directory
+  description:      Local plugin directory
+  required:         true
+  value:            /var/lib/grafana/local-plugins
+
+objects:
+
+# Image stream
+
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: grafana
+
+# Import image streams
+
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: centos
+  spec:
+    tags:
+    - from:
+        kind: DockerImage
+        name: centos:7
+      importPolicy:
+        scheduled: true
+      name: "7"
+      referencePolicy:
+        type: Source
+
+# Build
+
+- kind: BuildConfig
+  apiVersion: v1
+
+  metadata:
+    name: grafana
+
+  spec:
+    source:
+      git:
+        uri: ${GIT_URI}
+      type: Git
+
+    output:
+      to:
+        kind: ImageStreamTag
+        name: grafana:latest
+
+    strategy:
+      type: Docker
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: centos:7
+        env:
+          - name: GRAFANA_VERSION
+            value: ${GRAFANA_VERSION}
+          - name: GF_PLUGIN_DIR
+            value: ${PLUGIN_DIR}
+          - name: BUILD_INSTALL_PLUGINS
+            value: ${BUILD_INSTALL_PLUGINS}
+          - name: BUILD_REPO_URL
+            value: ${BUILD_REPO_URL}
+          - name: LOCAL_PLUGIN_DIR
+            value: ${LOCAL_PLUGIN_DIR}
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+    - type: GitHub
+      github:
+        secret: ${WEBHOOK_SECRET}
+    - type: Generic
+      generic:
+        secret: ${WEBHOOK_SECRET}
+
+# Custom configuration
+
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: grafana-custom-config
+  data:
+    custom.ini: |+
+      [paths]
+      data=${DATA_DIR}
+      logs=${LOG_DIR}
+      plugins=${PLUGIN_DIR}
+      
+      [database]
+      url=  mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE_NAME}
+      
+      [session]
+      provider=mysql
+      provider_config=${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(${MYSQL_HOST}:${MYSQL_PORT})/${MYSQL_DATABASE_NAME}
+      
+      [analytics]
+      reporting_enabled=false
+      check_for_updates=false
+      
+      [log]
+      mode=console
+      
+      [explore]
+      enabled=true
+
+# Deployment configuration
+
+- kind: DeploymentConfig
+  apiVersion: v1
+
+  metadata:
+    name: grafana
+
+  spec:
+
+    replicas: 1
+
+    selector:
+      app: grafana
+      deploymentconfig: grafana
+
+    strategy:
+      type: Recreate
+
+    template:
+
+      metadata:
+        labels:
+          app: grafana
+          deploymentconfig: grafana
+
+      spec:
+        containers:
+        - name: grafana
+          image: grafana
+
+          env:
+          - name: DC_DATA_DIR
+            value: ${DATA_DIR}
+          - name: DC_LOG_DIR
+            value: ${LOG_DIR}
+          - name: GF_PLUGIN_DIR
+            value: ${PLUGIN_DIR}
+          - name: GF_SECURITY_ADMIN_PASSWORD
+            value: ${ADMIN_PASSWORD}
+
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /login
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 9
+            successThreshold: 1
+            timeoutSeconds: 1
+
+          volumeMounts:
+          - mountPath: /etc/config
+            name: config
+
+        volumes:
+        - name: config
+          configMap:
+            name: grafana-custom-config
+
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - grafana
+        from:
+          kind: ImageStreamTag
+          name: grafana:latest
+
+# Service
+
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: grafana
+  spec:
+    selector:
+      app: grafana
+      deploymentconfig: grafana
+    ports:
+    - name: web-ui
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+
+# Route
+
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: grafana
+  spec:
+    port:
+      targetPort: web-ui
+    to:
+      kind: Service
+      name: grafana
+
