@@ -12,7 +12,7 @@ EXPOSE 3000
 
 RUN \
     yum -y update && \
-    yum -y install curl wget unzip git && \
+    yum -y install curl wget unzip && \
     yum -y install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-"$GRAFANA_VERSION"-1.x86_64.rpm && \
     yum clean all && rm -Rf /var/cache/yum
 
