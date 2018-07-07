@@ -20,7 +20,9 @@ COPY root /
 
 RUN \
     mkdir -p "$LOCAL_PLUGIN_DIR" && \
-    /usr/bin/grafana-openshift-install-remote-plugins
+    /usr/bin/grafana-openshift-install-remote-plugins 
+
+COPY datasources $LOCAL_PLUGIN_DIR
 
 RUN \
     /usr/bin/fix-permissions /usr/share/grafana && \
