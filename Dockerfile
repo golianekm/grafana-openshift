@@ -2,17 +2,17 @@
 # Will be overriden by the template
 FROM centos:7
 
-MAINTAINER Jens Reimann <jreimann@redhat.com>
+MAINTAINER Marcin Golianek <golianekm@gmail.com>
 LABEL \
-  name "Grafana OpenShift Image" \
-  maintainer "Jens Reimann <jreimann@redhat.com>"
+  name "Customized Grafana OpenShift Image" \
+  maintainer "Marcin Golianek <golianekm@gmail.com>"
 
 USER root
 EXPOSE 3000
 
 RUN \
     yum -y update && \
-    yum -y install curl wget unzip && \
+    yum -y install curl wget unzip git && \
     yum -y install https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-"$GRAFANA_VERSION"-1.x86_64.rpm && \
     yum clean all && rm -Rf /var/cache/yum
 
